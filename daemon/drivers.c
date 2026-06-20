@@ -326,8 +326,8 @@ LocalDriverCallback(
       data->y_resolution[0] = 300;
     }
 
-    data->x_default = data->x_resolution[(data->num_resolution + 1) / 2];
-    data->y_default = data->y_resolution[(data->num_resolution + 1) / 2];
+    data->x_default = data->x_resolution[(data->num_resolution - 1) / 2];
+    data->y_default = data->y_resolution[(data->num_resolution - 1) / 2];
 
     // Media
     if ((attr = ippFindAttribute(response, "media-supported", IPP_TAG_KEYWORD)) == NULL)
