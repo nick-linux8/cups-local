@@ -661,7 +661,7 @@ create_dest(const char    *printer,	// I - Printer name
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
   ippAddString(request, IPP_TAG_OPERATION, IPP_CONST_TAG(IPP_TAG_KEYWORD), "printer-service-type", NULL, "print");
   ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", NULL, printer);
-  ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "smi55357-device-type", NULL, driver);
+  ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "smi55357-driver", NULL, driver);
   ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "smi55357-device-uri", NULL, device_uri);
   cupsEncodeOptions(request, num_options, options, IPP_TAG_PRINTER);
 
