@@ -504,7 +504,25 @@ show_accepting(const char   *command,	// I - Command name
     value             = cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options);
     is_accepting_jobs = value && !strcmp(value, "true");
     if ((state_change_time = (time_t)cupsGetIntegerOption("printer-state-change-date-time", dest->num_options, dest->options)) == (time_t)LONG_MIN)
-      state_change_time = (time_t)cupsGetIntegerOption("printer-state-change-time", dest->num_options, dest->options);
+    {
+      // "printer-state-change-time" is a relative tick (seconds since printer
+      // boot), not a Unix timestamp.  Anchor it to wall-clock time via
+      // "printer-up-time" (also a relative tick counting from the same epoch).
+      int state_change_tick      = cupsGetIntegerOption("printer-state-change-time", dest->num_options, dest->options);
+      int current_printer_uptime = cupsGetIntegerOption("printer-up-time",           dest->num_options, dest->options);
+
+      if (state_change_tick > 0 && current_printer_uptime >= state_change_tick)
+      {
+        // How many seconds ago did the state change occur?
+        time_t seconds_ago = (time_t)(current_printer_uptime - state_change_tick);
+        state_change_time  = time(NULL) - seconds_ago;
+      }
+      else
+      {
+        // Printer lacks proper uptime telemetry; suppress the timestamp.
+        state_change_time = (time_t)0;
+      }
+    }
     state_message = cupsGetOption("printer-state-message", dest->num_options, dest->options);
 
     strdate(state_change_date, sizeof(state_change_date), state_change_time);
@@ -1048,7 +1066,25 @@ show_printers(const char   *command,	// I - Command name
     make_and_model    = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
     state             = (ipp_pstate_t)cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
     if ((state_change_time = (time_t)cupsGetIntegerOption("printer-state-change-date-time", dest->num_options, dest->options)) == (time_t)LONG_MIN)
-      state_change_time = (time_t)cupsGetIntegerOption("printer-state-change-time", dest->num_options, dest->options);
+    {
+      // "printer-state-change-time" is a relative tick (seconds since printer
+      // boot), not a Unix timestamp.  Anchor it to wall-clock time via
+      // "printer-up-time" (also a relative tick counting from the same epoch).
+      int state_change_tick      = cupsGetIntegerOption("printer-state-change-time", dest->num_options, dest->options);
+      int current_printer_uptime = cupsGetIntegerOption("printer-up-time",           dest->num_options, dest->options);
+
+      if (state_change_tick > 0 && current_printer_uptime >= state_change_tick)
+      {
+        // How many seconds ago did the state change occur?
+        time_t seconds_ago = (time_t)(current_printer_uptime - state_change_tick);
+        state_change_time  = time(NULL) - seconds_ago;
+      }
+      else
+      {
+        // Printer lacks proper uptime telemetry; suppress the timestamp.
+        state_change_time = (time_t)0;
+      }
+    }
     state_message = cupsGetOption("printer-state-message", dest->num_options, dest->options);
     state_reasons = cupsArrayNewStrings(cupsGetOption("printer-state-reasons", dest->num_options, dest->options), ',');
 
