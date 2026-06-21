@@ -609,6 +609,9 @@ LocalDriverCallback(
     data->icons[2].data    = everywhere_lg_png;
     data->icons[2].datalen = sizeof(everywhere_lg_png);
 
+    data->printfile_cb = pclps_print;
+    data->status_cb = pclps_status;
+
     // Cleanup...
     ippDelete(response);
     httpClose(http);
