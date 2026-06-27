@@ -89,6 +89,11 @@ static bool	pcl_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_
 static bool	pcl_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *pixels);
 
 static bool	pclps_print(pappl_job_t *job, int doc_number, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	everywhere_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	everywhere_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
+static bool	everywhere_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device);
+static bool	everywhere_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page);
+static bool	everywhere_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *pixels);
 static bool	pclps_status(pappl_printer_t *printer);
 static bool	pclps_update_status(pappl_printer_t *printer, pappl_device_t *device);
 
@@ -609,8 +614,13 @@ LocalDriverCallback(
     data->icons[2].data    = everywhere_lg_png;
     data->icons[2].datalen = sizeof(everywhere_lg_png);
 
-    data->printfile_cb = pclps_print;
-    data->status_cb = pclps_status;
+    data->printfile_cb  = pclps_print;
+    data->rendjob_cb    = everywhere_rendjob;
+    data->rendpage_cb   = everywhere_rendpage;
+    data->rstartjob_cb  = everywhere_rstartjob;
+    data->rstartpage_cb = everywhere_rstartpage;
+    data->rwriteline_cb = everywhere_rwriteline;
+    data->status_cb     = pclps_status;
 
     // Cleanup...
     ippDelete(response);
@@ -1281,7 +1291,40 @@ pcl_rwriteline(
   return (true);
 }
 
+static bool
+everywhere_rendjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device)
+{
+  (void)job; (void)options; (void)device;
+  return (true);
+}
 
+static bool
+everywhere_rendpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page)
+{
+  (void)job; (void)options; (void)device; (void)page;
+  return (true);
+}
+
+static bool
+everywhere_rstartjob(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device)
+{
+  (void)job; (void)options; (void)device;
+  return (true);
+}
+
+static bool
+everywhere_rstartpage(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned page)
+{
+  (void)job; (void)options; (void)device; (void)page;
+  return (true);
+}
+
+static bool
+everywhere_rwriteline(pappl_job_t *job, pappl_pr_options_t *options, pappl_device_t *device, unsigned y, const unsigned char *pixels)
+{
+  (void)job; (void)options; (void)device; (void)y; (void)pixels;
+  return (true);
+}
 //
 // 'pclps_print()' - Print file.
 //
