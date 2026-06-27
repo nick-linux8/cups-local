@@ -219,7 +219,7 @@ LocalTransformFilter(
   posix_spawn_file_actions_adddup2(&xactions, xstdout[1], 1);
   posix_spawn_file_actions_adddup2(&xactions, xstderr[1], 2);
 
-  if (posix_spawn(&xpid, "ipptransform", &xactions, NULL, (char * const *)xargv, xenvp))
+  if (posix_spawnp(&xpid, "ipptransform", &xactions, NULL, (char * const *)xargv, xenvp))
   {
     papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "Unable to start 'ipptransform' command: %s", strerror(errno));
     posix_spawn_file_actions_destroy(&xactions);
@@ -336,7 +336,7 @@ LocalTransformFilter(
       papplLogJob(job, PAPPL_LOGLEVEL_ERROR, "ipptransform command crashed on signal %d.", WTERMSIG(xstatus));
   }
 
-  return (xstatus ? true : false);
+  return (xstatus ? false : true);
 
   // This is where we go for hard failures...
   transform_failure:
