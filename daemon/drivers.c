@@ -416,7 +416,7 @@ LocalDriverCallback(
       col = ippGetCollection(attr, 0);
 
       data->media_default.size_width    = ippGetInteger(ippFindAttribute(col, "media-size/x-dimension", IPP_TAG_INTEGER), 0);
-      data->media_default.size_length   = ippGetInteger(ippFindAttribute(col, "media-size/x-dimension", IPP_TAG_INTEGER), 0);
+      data->media_default.size_length   = ippGetInteger(ippFindAttribute(col, "media-size/y-dimension", IPP_TAG_INTEGER), 0);
       data->media_default.bottom_margin = ippGetInteger(ippFindAttribute(col, "media-bottom-margin", IPP_TAG_INTEGER), 0);
       data->media_default.left_margin   = ippGetInteger(ippFindAttribute(col, "media-left-margin", IPP_TAG_INTEGER), 0);
       data->media_default.right_margin  = ippGetInteger(ippFindAttribute(col, "media-right-margin", IPP_TAG_INTEGER), 0);
@@ -469,7 +469,23 @@ LocalDriverCallback(
     {
       // 1- or 2-sided printing
       data->sides_supported = PAPPL_SIDES_ONE_SIDED | PAPPL_SIDES_TWO_SIDED_LONG_EDGE | PAPPL_SIDES_TWO_SIDED_SHORT_EDGE;
-      data->sides_default   = PAPPL_SIDES_TWO_SIDED_LONG_EDGE;
+
+      // Use the printer's own advertised default rather than assuming
+      // duplex just because it is supported - most printers default to
+      // one-sided even when they support duplex.
+      if ((keyword = ippGetString(ippFindAttribute(response, "sides-default", IPP_TAG_KEYWORD), 0, NULL)) != NULL)
+      {
+        if (!strcmp(keyword, "two-sided-short-edge"))
+          data->sides_default = PAPPL_SIDES_TWO_SIDED_SHORT_EDGE;
+        else if (!strcmp(keyword, "two-sided-long-edge"))
+          data->sides_default = PAPPL_SIDES_TWO_SIDED_LONG_EDGE;
+        else
+          data->sides_default = PAPPL_SIDES_ONE_SIDED;
+      }
+      else
+      {
+        data->sides_default = PAPPL_SIDES_ONE_SIDED;
+      }
     }
     else
     {
