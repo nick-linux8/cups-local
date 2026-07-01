@@ -208,6 +208,13 @@ main(int  argc,				// I - Number of command-line arguments
   system = papplSystemCreate(PAPPL_SOPTIONS_MULTI_QUEUE, "cups-locald", /*port*/0, /*subtypes*/NULL, LocalSpoolDir, log_file, log_level, /*auth_service*/NULL, /*tls_only*/false);
   papplSystemSetIdleShutdown(system, 120);
 
+  // Setup the generic drivers...
+  // Must happen before papplSystemLoadState(): printer creation during state
+  // load requires system->driver_cb to already be set, or every saved
+  // printer is silently dropped with "No driver callback set" on every
+  // startup (see pappl/printer.c papplPrinterCreate()).
+  papplSystemSetPrinterDrivers(system, sizeof(LocalDrivers) / sizeof(LocalDrivers[0]), LocalDrivers, LocalDriverAutoAdd, /* create_cb */NULL, LocalDriverCallback, NULL);
+
   // Load/save state to the state file...
   if (!papplSystemLoadState(system, LocalStateFile))
   {
@@ -249,9 +256,6 @@ main(int  argc,				// I - Number of command-line arguments
   papplSystemAddListeners(system, LocalSocket);
 
   papplSystemAddListeners(system, "localhost");
-
-  // Setup the generic drivers...
-  papplSystemSetPrinterDrivers(system, sizeof(LocalDrivers) / sizeof(LocalDrivers[0]), LocalDrivers, LocalDriverAutoAdd, /* create_cb */NULL, LocalDriverCallback, NULL);
 
   papplSystemAddMIMEFilter(system, "application/pdf", "application/pdf", LocalTransformFilter, NULL);
   papplSystemAddMIMEFilter(system, "application/pdf", "application/postscript", LocalTransformFilter, NULL);
