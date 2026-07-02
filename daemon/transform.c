@@ -246,15 +246,28 @@ LocalTransformFilter(
   polldata[1].fd     = xstderr[0];
   polldata[1].events = POLLIN;
 
-  while (poll(polldata, (nfds_t)2, -1) > 0)
+  // Poll both pipes until each is individually drained. We used to break the
+  // whole loop as soon as *either* fd reported POLLHUP, but POLLHUP can be
+  // reported for one pipe (typically stderr, which the child closes on exit)
+  // in the same or an earlier poll() call than the other pipe (stdout, which
+  // may still have buffered raster data queued) becomes readable. That raced
+  // us into returning "success" having sent partial or zero bytes of print
+  // data to the device even though ipptransform produced real output. Now we
+  // only stop watching a given fd once read() on it actually reports EOF.
+  while (polldata[0].fd >= 0 || polldata[1].fd >= 0)
   {
-    if (polldata[0].revents & POLLIN)
+    if (poll(polldata, (nfds_t)2, -1) <= 0)
+      break;
+
+    if (polldata[0].fd >= 0 && (polldata[0].revents & (POLLIN | POLLHUP | POLLERR)))
     {
       if ((bytes = read(xstdout[0], data, sizeof(data))) > 0)
 	papplDeviceWrite(device, data, (size_t)bytes);
+      else
+        polldata[0].fd = -1;		// EOF or error - done with stdout
     }
 
-    if (polldata[1].revents & POLLIN)
+    if (polldata[1].fd >= 0 && (polldata[1].revents & (POLLIN | POLLHUP | POLLERR)))
     {
       // Message on stderr - log message or update progress...
       if ((bytes = read(xstderr[0], endptr, sizeof(line) - (size_t)(endptr - line) - 1)) > 0)
@@ -316,10 +329,11 @@ LocalTransformFilter(
 	  *endptr = '\0';
 	}
       }
+      else
+      {
+        polldata[1].fd = -1;
+      }
     }
-
-    if ((polldata[0].revents & POLLHUP) || (polldata[1].revents & POLLHUP))
-      break;
   }
 
   close(xstdout[0]);
